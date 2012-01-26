@@ -1,0 +1,13 @@
+
+
+Prerequisites
+-------------
+
+1) ruby 
+
+2) rubygems
+
+3) the following gems:
+    - activeresource
+    - parseconfig
+

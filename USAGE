@@ -1,0 +1,6 @@
+USAGE:
+  #Generate files for all the servers
+  ruby run.rb 
+or
+  #Generate files only for a few servers
+  ruby run.rb "hostname1,hostname2,hostnameN" 
