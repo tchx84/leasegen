@@ -1,9 +1,6 @@
-#!/usr/bin/ruby
-#
-# leases_generator.rb : gets the list of schools with it's SNs (and UUIDs) and generates the leases
+# Gets the list of schools with it's SNs (and UUIDs) and generates the leases
 #
 # author: Raul Gutierrez S. (rgs@paraguayeduca.org)
-#
 
 require 'digest/md5'
 require 'fileutils'
@@ -28,16 +25,11 @@ class LeasesGenerator
     # set other params
     @leases_dir = @config_params.get_value("leases_dir") || LEASES_DIR
     @last_run_file = @config_params.get_value("last_run_file") || LAST_RUN_FILE
-
   end
 
-
   def generate(hostnames = [])
-
     begin 
-
       schools_info = Place.getSchoolsInfo(hostnames)
-
       raise "no school info received " if schools_info.length ==  0
 
       schools_info.each { |s|
@@ -50,19 +42,13 @@ class LeasesGenerator
         if md5_tmpfile != md5_previous || olderThan?(prev_checksum_file)
           doGenerateLeases(s, input_sn_uuids_file, md5_tmpfile)
         end
-
       }
-
     rescue
       $LOG.error($!.to_s)
     end
-
-
   end
 
-  ##
   # Sort the lines to assure you get the same MD5
-  #
   def calcMD5SUM(file_path, sort_lines = true)
     md5sum_str = ""
     lines = File.open(file_path, "r").readlines
@@ -70,13 +56,11 @@ class LeasesGenerator
     Digest::MD5.hexdigest(lines.join(""))
   end
 
-
   def run_cmd(cmd, debug = false)
     system(cmd) 
   end
 
   private 
-
   def doGenerateLeases(s, input_sn_uuids_file, new_md5sum)
     begin 
       expiry_date = s["expiry_date"]
@@ -113,9 +97,6 @@ class LeasesGenerator
     fp
   end
 
-  ###
-  #
-  #
   def olderThan?(file2check, num_of_seconds = SECS_IN_WEEK)
     ret = true
 
@@ -126,9 +107,6 @@ class LeasesGenerator
     ret
   end
   
-  ###
-  #
-  #
   def saveMD5SUM(md5sum_str, school_name)
     output_file = getCheckSumPath(school_name)
     File.open(output_file, "w") do |fp|
@@ -149,9 +127,6 @@ class LeasesGenerator
     md5sum_str
   end
 
-  ####
-  #
-  #
   def getCheckSumPath(school_name)
     File.join(MD5SUMS_DIR, school_name + ".checksum")
   end

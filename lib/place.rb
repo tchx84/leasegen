@@ -1,12 +1,7 @@
-#!/usr/bin/ruby
-#
 # ActiveResource frontend to Place model
-#
-#
 
 require "active_resource"
 require "digest/sha1"
-
 
 class Place < ActiveResource::Base
   
