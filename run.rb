@@ -47,6 +47,12 @@ rescue LeasesGeneratorError => e
   puts "ERROR: #{e.message}"
   $LOG.fatal(e.message)
   exit(-1)
+rescue Exception => e
+  puts "Unhandled exception: #{e.message}"
+  puts e.backtrace.inspect
+  $LOG.fatal(e.message)
+  $LOG.fatal(e.backtrace.inspect)
+  exit(-1)
 end
 
 exit(0)
