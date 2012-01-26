@@ -25,13 +25,6 @@ hostnames = []
 begin 
   if ARGV.length > 0
     hostnames = ARGV[0].split(',').map { |hostname| hostname.strip }
-
-    hostnames.each { |hostname|
-      if !hostname.match(/schoolserver\.\w+\.\w+\.paraguayeduca\.org/)
-        raise "Error de sintaxis"
-      end
-    }
-
   end
 rescue
   usage()
