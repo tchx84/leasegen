@@ -1,7 +1,6 @@
 #!/usr/bin/ruby
-#
-#
 
+require "rubygems"
 require "logger"
 require File.join(File.dirname(__FILE__), 'lib', 'leases_generator')
 

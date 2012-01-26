@@ -8,7 +8,6 @@
 require 'digest/md5'
 require 'fileutils'
 require 'tempfile'
-require 'rubygems'
 require 'parseconfig'
 require File.join(File.dirname(__FILE__),'place')
 

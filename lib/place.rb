@@ -4,7 +4,6 @@
 #
 #
 
-require "rubygems"
 require "active_resource"
 require "digest/sha1"
 
