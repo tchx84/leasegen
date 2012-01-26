@@ -1,0 +1,10 @@
+inventario-leasegen is a Ruby-based application which communicates
+with inventario.
+
+leasegen requests a list of school servers from inventario.
+inventario responds with a list of school servers, and for each school
+in question, a list of laptop serial numbers and their UUIDs of the XOs
+in the school.
+
+leasegen then calls into bios-crypto, generating leases for the
+specified laptops, saving the leases on disk.
