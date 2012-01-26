@@ -8,6 +8,9 @@ require 'tempfile'
 require 'parseconfig'
 require 'place'
 
+class LeasesGeneratorError < StandardError
+end
+
 class LeasesGenerator
 
   LEASES_DIR = "/usr/share/puppetcontent/leases"
@@ -17,7 +20,12 @@ class LeasesGenerator
 
   def initialize
     config_file = APP_ROOT.join("etc", "leasegen.conf")
-    @config_params = ParseConfig.new(config_file)
+    begin
+      @config_params = ParseConfig.new(config_file)
+    rescue Exception => e
+      msg = "Could not read config file #{config_file}: #{e.message}"
+      raise LeasesGeneratorError, msg
+    end
 
     # config ActiveResource params
     Place.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))

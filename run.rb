@@ -39,5 +39,12 @@ end
 
 $LOG = Logger.new(LOG_PATH)
 
-lg = LeasesGenerator.new
-lg.generate(hostnames)
+begin
+  lg = LeasesGenerator.new
+  lg.generate(hostnames)
+rescue LeasesGeneratorError => e
+  puts "ERROR: #{e.message}"
+  exit(-1)
+end
+
+exit(0)
