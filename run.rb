@@ -2,9 +2,14 @@
 
 require "rubygems"
 require "logger"
-require File.join(File.dirname(__FILE__), 'lib', 'leases_generator')
+require "pathname"
 
-LOG_PATH = File.join(File.dirname(__FILE__), "var", "errors.log")
+APP_ROOT = Pathname(__FILE__).realpath.dirname.realpath
+$:.unshift APP_ROOT.join("lib")
+
+require "leases_generator"
+
+LOG_PATH = APP_ROOT.join("var", "errors.log")
 
 def usage()
   puts <<EOF

@@ -6,17 +6,17 @@ require 'digest/md5'
 require 'fileutils'
 require 'tempfile'
 require 'parseconfig'
-require File.join(File.dirname(__FILE__),'place')
+require 'place'
 
 class LeasesGenerator
 
   LEASES_DIR = "/usr/share/puppetcontent/leases"
-  LAST_RUN_FILE = File.join(File.dirname(__FILE__), "..", "var", "last_run")
+  LAST_RUN_FILE = APP_ROOT.join("var", "last_run")
   SECS_IN_WEEK = (3600*24*7)
-  MD5SUMS_DIR = File.join(File.dirname(__FILE__), "..", "var")
+  MD5SUMS_DIR = APP_ROOT.join("var")
 
-  def initialize 
-    config_file = File.join(File.dirname(__FILE__), "..", "etc", "leasegen.conf")
+  def initialize
+    config_file = APP_ROOT.join("etc", "leasegen.conf")
     @config_params = ParseConfig.new(config_file)
 
     # config ActiveResource params
