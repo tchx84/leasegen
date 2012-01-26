@@ -9,7 +9,7 @@ $:.unshift APP_ROOT.join("lib")
 
 require "leases_generator"
 
-LOG_PATH = APP_ROOT.join("var", "errors.log")
+LOG_PATH = APP_ROOT.join("var", "leasegen.log")
 
 def usage()
   puts <<EOF
@@ -37,13 +37,14 @@ rescue
 end
 
 
-$LOG = Logger.new(LOG_PATH)
+$LOG = Logger.new(LOG_PATH, "monthly")
 
 begin
   lg = LeasesGenerator.new
   lg.generate(hostnames)
 rescue LeasesGeneratorError => e
   puts "ERROR: #{e.message}"
+  $LOG.fatal(e.message)
   exit(-1)
 end
 
