@@ -13,8 +13,6 @@ end
 
 class LeasesGenerator
 
-  LEASES_DIR = "/usr/share/puppetcontent/leases"
-  LAST_RUN_FILE = APP_ROOT.join("var", "last_run")
   SECS_IN_WEEK = (3600*24*7)
   MD5SUMS_DIR = APP_ROOT.join("var")
 
@@ -31,8 +29,10 @@ class LeasesGenerator
     Place.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
 
     # set other params
-    @leases_dir = @config_params.get_value("leases_dir") || LEASES_DIR
-    @last_run_file = @config_params.get_value("last_run_file") || LAST_RUN_FILE
+    @leases_dir = @config_params.get_value("leases_dir") || "/var/lib/xo-activations/by-school"
+    @last_run_file = @config_params.get_value("last_run_file") || APP_ROOT.join("var", "last_run")
+
+    FileUtils.mkpath(@leases_dir)
   end
 
   def generate(hostnames = [])

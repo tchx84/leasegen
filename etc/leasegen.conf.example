@@ -1,3 +1,13 @@
+# REQUIRED PARAMETERS
+
+# inventario server login details, to retrieve school/laptop info
 user = "xxx"
 pass = "xxx"
 site = "http://localhost:3000/"
+
+
+# OPTIONAL PARAMETERS
+
+# Where to store the output JSON lease files
+# Defaults to "/var/lib/xo-activations/by-school
+#leases_dir = "/var/lib/xo-activations/by-school"
