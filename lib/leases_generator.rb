@@ -38,9 +38,10 @@ class LeasesGenerator
   def generate(hostnames = [])
     begin 
       schools_info = Place.getSchoolsInfo(hostnames)
-      raise "no school info received " if schools_info.length ==  0
+      $LOG.info("Received data for #{schools_info.length} schools")
 
       schools_info.each { |s|
+        $LOG.info("Processing #{s["serials_uuids"].length} laptops for #{s["school_name"]}")
         input_sn_uuids_fp = genInputFile(s["serials_uuids"])
         input_sn_uuids_file = input_sn_uuids_fp.path
         md5_tmpfile = calcMD5SUM(input_sn_uuids_file)
@@ -49,6 +50,8 @@ class LeasesGenerator
 
         if md5_tmpfile != md5_previous || olderThan?(prev_checksum_file)
           doGenerateLeases(s, input_sn_uuids_file, md5_tmpfile)
+        else
+          $LOG.info("School is already up-to-date.")
         end
       }
     rescue
@@ -73,12 +76,15 @@ class LeasesGenerator
     begin 
       expiry_date = s["expiry_date"]
       output_leases_file = s["school_name"]
+      $LOG.info("Generating leases with expiry #{expiry_date}")
 
       # generate leases for this school
       cmd = "/home/oats/leasegen/makeleases #{expiry_date} #{input_sn_uuids_file} #{@leases_dir}/#{output_leases_file}"
       
       if run_cmd(cmd)
         saveMD5SUM(new_md5sum, s["school_name"])
+      else
+        $LOG.error("Lease generation failed.")
       end
 
     rescue 

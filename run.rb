@@ -38,6 +38,7 @@ end
 
 
 $LOG = Logger.new(LOG_PATH, "monthly")
+$LOG.info("Starting")
 
 begin
   lg = LeasesGenerator.new
