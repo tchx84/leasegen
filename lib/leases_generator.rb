@@ -19,7 +19,7 @@ class LeasesGenerator
   MD5SUMS_DIR = File.join(File.dirname(__FILE__), "..", "var")
 
   def initialize 
-    config_file = File.join(File.dirname(__FILE__), "..", "etc", "genlease.conf")
+    config_file = File.join(File.dirname(__FILE__), "..", "etc", "leasegen.conf")
     @config_params = ParseConfig.new(config_file)
 
     # config ActiveResource params

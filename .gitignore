@@ -1,3 +1,4 @@
 *.swp
 var/*.checksum
 var/*.log
+etc/leasegen.conf
