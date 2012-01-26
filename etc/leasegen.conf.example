@@ -5,9 +5,16 @@ user = "xxx"
 pass = "xxx"
 site = "http://localhost:3000/"
 
+# Path to pre-prepared bios-crypto installation
+bios_crypto_path = "/home/foo/bios-crypto"
+
+# Path to public/private keys. If the files are at /foo/lease.{private,public}
+# then just specify /foo/lease here (i.e. drop the extension).
+signing_key_path = "/home/foo/keys/lease"
+
 
 # OPTIONAL PARAMETERS
 
 # Where to store the output JSON lease files
-# Defaults to "/var/lib/xo-activations/by-school
-#leases_dir = "/var/lib/xo-activations/by-school"
+# Defaults to "/var/lib/xo-activations"
+#leases_dir = "/var/lib/xo-activations"

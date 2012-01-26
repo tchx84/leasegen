@@ -29,86 +29,107 @@ class LeasesGenerator
     Place.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
 
     # set other params
-    @leases_dir = @config_params.get_value("leases_dir") || "/var/lib/xo-activations/by-school"
+    @leases_dir = @config_params.get_value("leases_dir") || "/var/lib/xo-activations"
     @last_run_file = @config_params.get_value("last_run_file") || APP_ROOT.join("var", "last_run")
+    @bios_crypto_path = @config_params.get_value("bios_crypto_path")
+    @signing_key_path = @config_params.get_value("signing_key_path")
 
-    FileUtils.mkpath(@leases_dir)
+    FileUtils.mkpath(File.join(@leases_dir, "by-school"))
+    FileUtils.mkpath(File.join(@leases_dir, "by-laptop"))
   end
 
   def generate(hostnames = [])
-    begin 
+    Dir.chdir(@bios_crypto_path + "/build") do
+      $LOG.info("Querying for school info")
       schools_info = Place.getSchoolsInfo(hostnames)
       $LOG.info("Received data for #{schools_info.length} schools")
 
       schools_info.each { |s|
         $LOG.info("Processing #{s["serials_uuids"].length} laptops for #{s["school_name"]}")
-        input_sn_uuids_fp = genInputFile(s["serials_uuids"])
-        input_sn_uuids_file = input_sn_uuids_fp.path
-        md5_tmpfile = calcMD5SUM(input_sn_uuids_file)
+        md5_serials = calcMD5SUM(s["serials_uuids"])
         prev_checksum_file = getCheckSumPath(s["school_name"])
         md5_previous = getMD5SUMFromFile(prev_checksum_file)
 
-        if md5_tmpfile != md5_previous || olderThan?(prev_checksum_file)
-          doGenerateLeases(s, input_sn_uuids_file, md5_tmpfile)
+        if md5_serials != md5_previous || olderThan?(prev_checksum_file)
+          ret = generateLeases(s["school_name"], s["serials_uuids"], s["expiry_date"])
+          if ret
+            saveMD5SUM(md5_serials, s["school_name"])
+          else
+            $LOG.error("Lease generation failure, aborting")
+          end
         else
           $LOG.info("School is already up-to-date.")
         end
       }
-    rescue
-      $LOG.error($!.to_s)
+      $LOG.info("Complete")
     end
   end
 
-  # Sort the lines to assure you get the same MD5
-  def calcMD5SUM(file_path, sort_lines = true)
-    md5sum_str = ""
-    lines = File.open(file_path, "r").readlines
-    lines.sort! if sort_lines
-    Digest::MD5.hexdigest(lines.join(""))
-  end
+  private
 
-  def run_cmd(cmd, debug = false)
-    system(cmd) 
-  end
-
-  private 
-  def doGenerateLeases(s, input_sn_uuids_file, new_md5sum)
-    begin 
-      expiry_date = s["expiry_date"]
-      output_leases_file = s["school_name"]
-      $LOG.info("Generating leases with expiry #{expiry_date}")
-
-      # generate leases for this school
-      cmd = "/home/oats/leasegen/makeleases #{expiry_date} #{input_sn_uuids_file} #{@leases_dir}/#{output_leases_file}"
-      
-      if run_cmd(cmd)
-        saveMD5SUM(new_md5sum, s["school_name"])
-      else
-        $LOG.error("Lease generation failed.")
-      end
-
-    rescue 
-      $LOG.error($!.to_s)
-    end
-  end
-
-  ###
-  # genInputFile: generates file with SNs and UUIDs from which leases are generated
-  # @serials_uuids : [ { :serial_number, :uuid } , ... ]
-  #
-  # returns: path to generated file with serials and uuids:
-  # SN UUID
-  # SN UUID
-  # ....
-  #
-  def genInputFile(serials_uuids)
-    fp = Tempfile.new("serials_uuids")
-    serials_uuids.each { |line|
-      fp.puts "#{line["serial_number"]} #{line["uuid"]}"
+  def calcMD5SUM(laptops)
+    # Calculate a unique checksum of a serial/UUID hash
+    lines = []
+    laptops.each { |laptop|
+      lines.push(laptop["serial_number"] + " " + laptop["uuid"])
     }
 
-    fp.close()
-    fp
+    Digest::MD5.hexdigest(lines.sort.join("\n"))
+  end
+
+  def generateLease(serial, uuid, expiry)
+    cmd = "./make-lease.sh --signingkey \"#{@signing_key_path}\" \"#{serial}\" \"#{uuid}\" \"#{expiry}\""
+    lease = nil
+    IO.popen(cmd) { |proc|
+      lease = proc.read
+    }
+    if $? == 0
+      return lease
+    else
+      $LOG.error("make-lease failed with code #{$?}")
+      return nil
+    end
+  end
+
+  def generateLeases(school_name, laptops, expiry_date)
+    $LOG.info("Generating leases with expiry #{expiry_date}")
+    jsonfd = Tempfile.new(school_name)
+    jsonfd.write("[1,{")
+
+    # produce Canonical JSON output, which must be sorted by serial number
+    laptops = laptops.sort_by { |laptop| laptop["serial_number"] }
+
+    first = true
+    laptops.each { |laptop|
+      serial = laptop["serial_number"]
+      lease = generateLease(serial, laptop["uuid"], expiry_date)
+      if lease.nil?
+        jsonfd.close
+        jsonfd.unlink
+        return false
+      end
+
+      fd = Tempfile.new(serial)
+      fd.write(lease)
+      fd.close
+      output_path = getLaptopLeasePath(serial)
+      File.rename(fd.path, output_path)
+      File.chmod(0644, output_path)
+
+      if !first
+        jsonfd.write(",")
+      else
+        first = false
+      end
+      jsonfd.write("\"#{serial}\":\"#{lease}\"")
+    }
+
+    jsonfd.write("}]")
+    jsonfd.close
+    output_path = getSchoolLeasePath(school_name)
+    File.rename(jsonfd.path, output_path)
+    File.chmod(0644, output_path)
+    return true
   end
 
   def olderThan?(file2check, num_of_seconds = SECS_IN_WEEK)
@@ -143,6 +164,16 @@ class LeasesGenerator
 
   def getCheckSumPath(school_name)
     File.join(MD5SUMS_DIR, school_name + ".checksum")
+  end
+
+  def getSchoolLeasePath(school_name)
+    File.join(@leases_dir, "by-school", school_name)
+  end
+
+  def getLaptopLeasePath(serial)
+    dir = File.join(@leases_dir, "by-laptop", serial[-2,2])
+    FileUtils.mkpath(dir)
+    File.join(dir, serial)
   end
 
 end
