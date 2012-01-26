@@ -18,3 +18,7 @@ signing_key_path = "/home/foo/keys/lease"
 # Where to store the output JSON lease files
 # Defaults to "/var/lib/xo-activations"
 #leases_dir = "/var/lib/xo-activations"
+
+# Number of seconds before existing generated leases are considered stale
+# (and hence should be re-generated). Default 604800 (1 week).
+#stale_lease_threshold = 604800
