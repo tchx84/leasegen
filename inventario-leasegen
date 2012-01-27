@@ -1,0 +1,13 @@
+#!/bin/bash
+# inventario-leasegen launch script for installed version
+
+lock="/tmp/inventario-leasegen.lock"
+
+(
+	if ! flock -n 200; then
+		echo "instance already running, aborting..." >&2
+		exit 1
+	fi
+
+	/var/inventario-leasegen/run.rb
+) 200>$lock

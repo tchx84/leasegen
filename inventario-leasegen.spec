@@ -30,7 +30,7 @@ cp -a etc/leasegen.conf.example $RPM_BUILD_ROOT/var/%{name}/etc
 cp -a lib/*.rb $RPM_BUILD_ROOT/var/%{name}/lib
 
 mkdir -p $RPM_BUILD_ROOT/usr/bin
-ln -s /var/%{name}/run.rb $RPM_BUILD_ROOT/usr/bin/%{name}
+cp -a inventario-leasegen $RPM_BUILD_ROOT/usr/bin
 
 mkdir -p $RPM_BUILD_ROOT/var/lib/xo-activations
 
