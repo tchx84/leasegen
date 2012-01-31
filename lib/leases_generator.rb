@@ -50,7 +50,7 @@ class LeasesGenerator
         prev_checksum_file = getCheckSumPath(s["school_name"])
         md5_previous = getMD5SUMFromFile(prev_checksum_file)
 
-        if md5_serials != md5_previous || leasesStale?(prev_checksum_file)
+        if md5_serials != md5_previous || leasesStale?(prev_checksum_file) || !haveLeases?(s["school_name"])
           ret = generateLeases(s["school_name"], s["serials_uuids"], s["expiry_date"])
           if ret
             saveMD5SUM(md5_serials, s["school_name"])
@@ -140,6 +140,10 @@ class LeasesGenerator
     end
     
     ret
+  end
+
+  def haveLeases?(school_name)
+    return File.exists?(getSchoolLeasePath(school_name))
   end
   
   def saveMD5SUM(md5sum_str, school_name)
