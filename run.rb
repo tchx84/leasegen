@@ -42,6 +42,7 @@ $LOG.info("Starting")
 
 begin
   lg = LeasesGenerator.new
+  lg.fetch_stolen_list
   lg.generate(hostnames)
 rescue LeasesGeneratorError => e
   puts "ERROR: #{e.message}"

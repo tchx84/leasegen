@@ -7,6 +7,7 @@ require 'fileutils'
 require 'tempfile'
 require 'parseconfig'
 require 'place'
+require 'laptop'
 
 class LeasesGeneratorError < StandardError
 end
@@ -26,6 +27,7 @@ class LeasesGenerator
 
     # config ActiveResource params
     Place.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
+    Laptop.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
 
     # set other params
     @leases_dir = @config_params.get_value("leases_dir") || "/var/lib/xo-activations"
@@ -36,6 +38,33 @@ class LeasesGenerator
 
     FileUtils.mkpath(File.join(@leases_dir, "by-school"))
     FileUtils.mkpath(File.join(@leases_dir, "by-laptop"))
+  end
+
+  def fetch_stolen_list()
+    $LOG.info("Querying for stolen laptops")
+    stolen_list = Laptop.stolen_list
+    return if stolen_list.nil?
+
+    csv_fd = Tempfile.new("stolen_csv")
+    list_fd = Tempfile.new("stolen_list")
+    stolen_list.each { |laptop|
+      uuid = laptop["uuid"]
+      serial_number = laptop["serial_number"]
+      csv_fd.write(laptop["serial_number"] + "," + uuid + "\n")
+      list_fd.write(laptop["serial_number"] + "\n")
+    }
+
+    csv_fd.close
+    list_fd.close
+    File.chmod(0644, csv_fd.path)
+    File.chmod(0644, list_fd.path)
+
+    outfile = File.join(@leases_dir, "stolen.csv")
+    File.rename(csv_fd.path, outfile)
+
+    outfile = File.join(@leases_dir, "stolen.list")
+    File.rename(list_fd.path, outfile)
+    $LOG.info("Wrote stolen laptop lists")
   end
 
   def generate(hostnames = [])

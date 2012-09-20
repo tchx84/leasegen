@@ -8,3 +8,7 @@ in the school.
 
 leasegen then calls into bios-crypto, generating leases for the
 specified laptops, saving the leases on disk.
+
+A list of stolen laptops is also saved in the output directory:
+"serial,uuid" format (e.g. for oatslite) in stolen.csv
+One-serial-per-line format (e.g. for XS) in stolen.list
