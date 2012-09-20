@@ -1,0 +1,6 @@
+#!/bin/bash
+version=$(grep "Version:" inventario-leasegen.spec)
+version=${version#Version:}
+version=${version//[[:space:]]/}
+git archive --format tar --prefix inventario-leasegen-${version}/ HEAD | gzip > inventario-leasegen-$version.tar.gz
+rpmbuild -ba inventario-leasegen.spec --define "_sourcedir $(pwd)"
