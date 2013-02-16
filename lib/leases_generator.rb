@@ -26,15 +26,15 @@ class LeasesGenerator
     end
 
     # config ActiveResource params
-    Place.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
-    Laptop.set_params(@config_params.get_value("site"), @config_params.get_value("user"), @config_params.get_value("pass"))
+    Place.set_params(@config_params["site"], @config_params["user"], @config_params["pass"])
+    Laptop.set_params(@config_params["site"], @config_params["user"], @config_params["pass"])
 
     # set other params
-    @leases_dir = @config_params.get_value("leases_dir") || "/var/lib/xo-activations"
-    @last_run_file = @config_params.get_value("last_run_file") || APP_ROOT.join("var", "last_run")
-    @stale_lease_threshold = @config_params.get_value("stale_lease_threshold") || 604800
-    @bios_crypto_path = @config_params.get_value("bios_crypto_path")
-    @signing_key_path = @config_params.get_value("signing_key_path")
+    @leases_dir = @config_params["leases_dir"] || "/var/lib/xo-activations"
+    @last_run_file = @config_params["last_run_file"] || APP_ROOT.join("var", "last_run")
+    @stale_lease_threshold = @config_params["stale_lease_threshold"] || 604800
+    @bios_crypto_path = @config_params["bios_crypto_path"]
+    @signing_key_path = @config_params["signing_key_path"]
 
     FileUtils.mkpath(File.join(@leases_dir, "by-school"))
     FileUtils.mkpath(File.join(@leases_dir, "by-laptop"))
