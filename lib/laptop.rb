@@ -6,6 +6,7 @@ require "digest/sha1"
 class Laptop < ActiveResource::Base
   
   def self.set_params(site, user, password)
+    self.format = :xml
     self.site = site
     self.user = user
     self.password = Digest::SHA1.hexdigest(password)
