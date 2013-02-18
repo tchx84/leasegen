@@ -45,8 +45,8 @@ class LeasesGenerator
     stolen_list = Laptop.stolen_list
     return if stolen_list.nil?
 
-    csv_fd = Tempfile.new("stolen_csv")
-    list_fd = Tempfile.new("stolen_list")
+    csv_fd = Tempfile.new("stolen_csv", "/var/tmp")
+    list_fd = Tempfile.new("stolen_list", "/var/tmp")
     stolen_list.each { |laptop|
       uuid = laptop["uuid"]
       serial_number = laptop["serial_number"]
@@ -122,7 +122,7 @@ class LeasesGenerator
 
   def generateLeases(school_name, laptops, expiry_date)
     $LOG.info("Generating leases with expiry #{expiry_date}")
-    jsonfd = Tempfile.new(school_name)
+    jsonfd = Tempfile.new(school_name, "/var/tmp")
     jsonfd.write("[1,{")
 
     # produce Canonical JSON output, which must be sorted by serial number
@@ -138,7 +138,7 @@ class LeasesGenerator
         return false
       end
 
-      fd = Tempfile.new(serial)
+      fd = Tempfile.new(serial, "/var/tmp")
       fd.write(lease)
       fd.close
       output_path = getLaptopLeasePath(serial)
