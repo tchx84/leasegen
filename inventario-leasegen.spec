@@ -1,5 +1,5 @@
 Name:		inventario-leasegen
-Version:	1.1
+Version:	1.2
 Release:	1%{?dist}
 Summary:	inventario lease generator
 
@@ -7,7 +7,6 @@ Group:		Applications/Internet
 License:	GPL
 URL:		http://laptop.org
 Source0:	%{name}-%{version}.tar.gz
-BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 Requires:	rubygem-activeresource rubygem-parseconfig
 Requires(pre): shadow-utils
@@ -35,15 +34,11 @@ cp -a inventario-leasegen $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/var/lib/xo-activations
 
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 %pre
 getent group inventario >/dev/null || groupadd -r inventario
 
 
 %files
-%defattr(-,root,root,-)
 %doc USAGE README
 %dir /var/%{name}
 /var/%{name}/etc
