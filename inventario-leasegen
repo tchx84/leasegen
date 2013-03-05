@@ -9,5 +9,5 @@ lock="/tmp/inventario-leasegen.lock"
 		exit 1
 	fi
 
-	/var/inventario-leasegen/run.rb
+	/var/inventario-leasegen/run.rb $*
 ) 200>$lock
