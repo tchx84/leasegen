@@ -25,7 +25,7 @@ EOF
 
 end
 
-hostnames = []
+hostnames = nil
 
 begin 
   if ARGV.length > 0

@@ -6,7 +6,7 @@ require 'digest/md5'
 require 'fileutils'
 require 'tempfile'
 require 'parseconfig'
-require 'place'
+require 'school_info'
 require 'laptop'
 
 class LeasesGeneratorError < StandardError
@@ -26,7 +26,7 @@ class LeasesGenerator
     end
 
     # config ActiveResource params
-    Place.set_params(@config_params["site"], @config_params["user"], @config_params["pass"])
+    SchoolInfo.set_params(@config_params["site"], @config_params["user"], @config_params["pass"])
     Laptop.set_params(@config_params["site"], @config_params["user"], @config_params["pass"])
 
     # set other params
@@ -67,31 +67,52 @@ class LeasesGenerator
     $LOG.info("Wrote stolen laptop lists")
   end
 
-  def generate(hostnames = [])
-    Dir.chdir(@bios_crypto_path + "/build")
-    $LOG.info("Querying for school info")
-    schools_info = Place.getSchoolsInfo(hostnames)
-    $LOG.info("Received data for #{schools_info.length} schools")
+  def get_all_hostnames
+    $LOG.info("Querying for school hostnames")
+    hostnames = SchoolInfo.list
+    if hostnames.nil?
+      $LOG.error("Could not list school hostnames.")
+    else
+      $LOG.info("Received #{hostnames.length} school hostnames.")
+    end
+    hostnames
+  end
 
-    schools_info.each { |s|
-      $LOG.info("Processing #{s["serials_uuids"].length} laptops for #{s["school_name"]}")
-      md5_serials = calcMD5SUM(s["serials_uuids"])
-      prev_checksum_file = getCheckSumPath(s["school_name"])
+  def generate(hostnames = nil)
+    Dir.chdir(@bios_crypto_path + "/build")
+
+    hostnames = get_all_hostnames if hostnames.nil?
+    return if hostnames.nil?
+
+    hostnames.each { |hostname|
+      $LOG.info("Querying school #{hostname}")
+      info = SchoolInfo.lease_info(hostname)
+
+      if info.nil?
+        $LOG.error("Could not retrieve school info, skipping.")
+        next
+      end
+
+      $LOG.info("Processing #{info["serials_uuids"].length} laptops for #{hostname}")
+      md5_serials = calcMD5SUM(info["serials_uuids"])
+      prev_checksum_file = getCheckSumPath(hostname)
       md5_previous = getMD5SUMFromFile(prev_checksum_file)
 
-      if md5_serials != md5_previous || leasesStale?(prev_checksum_file) || !haveLeases?(s["school_name"])
-        ret = generateLeases(s["school_name"], s["serials_uuids"], s["expiry_date"])
-        if ret
-          saveMD5SUM(md5_serials, s["school_name"])
-        else
-          $LOG.error("Lease generation failure, aborting")
-        end
-      else
+      if haveLeases?(hostname) && md5_serials == md5_previous && !leasesStale?(prev_checksum_file)
         $LOG.info("School is already up-to-date.")
+        next
       end
-      }
-      $LOG.info("Complete")
-    end
+
+      ret = generateLeases(hostname, info["serials_uuids"], info["expiry_date"])
+      if !ret
+        $LOG.error("Lease generation failure, skipping.")
+        next
+      end
+
+      $LOG.info("Leases generated/refreshed.")
+      saveMD5SUM(md5_serials, hostname)
+    }
+    $LOG.info("Complete")
   end
 
   private
