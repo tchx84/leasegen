@@ -68,27 +68,27 @@ class LeasesGenerator
   end
 
   def generate(hostnames = [])
-    Dir.chdir(@bios_crypto_path + "/build") do
-      $LOG.info("Querying for school info")
-      schools_info = Place.getSchoolsInfo(hostnames)
-      $LOG.info("Received data for #{schools_info.length} schools")
+    Dir.chdir(@bios_crypto_path + "/build")
+    $LOG.info("Querying for school info")
+    schools_info = Place.getSchoolsInfo(hostnames)
+    $LOG.info("Received data for #{schools_info.length} schools")
 
-      schools_info.each { |s|
-        $LOG.info("Processing #{s["serials_uuids"].length} laptops for #{s["school_name"]}")
-        md5_serials = calcMD5SUM(s["serials_uuids"])
-        prev_checksum_file = getCheckSumPath(s["school_name"])
-        md5_previous = getMD5SUMFromFile(prev_checksum_file)
+    schools_info.each { |s|
+      $LOG.info("Processing #{s["serials_uuids"].length} laptops for #{s["school_name"]}")
+      md5_serials = calcMD5SUM(s["serials_uuids"])
+      prev_checksum_file = getCheckSumPath(s["school_name"])
+      md5_previous = getMD5SUMFromFile(prev_checksum_file)
 
-        if md5_serials != md5_previous || leasesStale?(prev_checksum_file) || !haveLeases?(s["school_name"])
-          ret = generateLeases(s["school_name"], s["serials_uuids"], s["expiry_date"])
-          if ret
-            saveMD5SUM(md5_serials, s["school_name"])
-          else
-            $LOG.error("Lease generation failure, aborting")
-          end
+      if md5_serials != md5_previous || leasesStale?(prev_checksum_file) || !haveLeases?(s["school_name"])
+        ret = generateLeases(s["school_name"], s["serials_uuids"], s["expiry_date"])
+        if ret
+          saveMD5SUM(md5_serials, s["school_name"])
         else
-          $LOG.info("School is already up-to-date.")
+          $LOG.error("Lease generation failure, aborting")
         end
+      else
+        $LOG.info("School is already up-to-date.")
+      end
       }
       $LOG.info("Complete")
     end
